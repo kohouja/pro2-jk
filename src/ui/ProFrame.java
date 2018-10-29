@@ -184,7 +184,7 @@ public class ProFrame extends JFrame {
 
 
         }catch (Exception e){
-
+            System.out.print(e);
         }
     }
 
