@@ -1,11 +1,10 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -15,6 +14,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.WindowConstants;
 
+import model.FeedItem;
 import model.TableModel;
 import model.ToDoItem;
 import rss.RssItem;
@@ -52,6 +52,16 @@ public class ProFrame extends JFrame {
         loadButton.setText("Načíst");
         toolbar.add(loadButton);
 
+        JButton addUrlButton = new JButton();
+        addUrlButton.setText("Add Url");
+        toolbar.add(addUrlButton);
+
+        addUrlButton.addActionListener(action -> {
+            String url = new AddUrlDialog().getUrl();
+            this.addFeed(url);
+            this.parse(url);
+        });
+
         button.addActionListener(action -> {
             ToDoItem item = new ProDialog().getItem();
             model.add(item);
@@ -71,21 +81,30 @@ public class ProFrame extends JFrame {
 
         setLocationRelativeTo(null); //center okna na monitoru
 
-        parse();
+        readFeeds();
 
     }
 
-    private void parse(){
+    private void parse(String url){
         try{
-            RssParser parser = new RssParser(
-                    new FileInputStream(
-                            new File("src\\data\\download.xml")));
+//            RssParser parser = new RssParser(
+//                    new FileInputStream(
+//                            new File("src\\data\\download.xml")));
+//            String url = "http://www.eurofotbal.cz/feed/rss/premier-league/";
+//            String url1 = "http://servis.idnes.cz/rss.aspx?c=zpravodaj";
+//            String url2 = "http://servis.idnes.cz/rss.aspx?c=zpravodaj";
+            URLConnection connection = new URL(url).openConnection();
+            connection.connect();
+            InputStream stream = connection.getInputStream();
+            RssParser parser = new RssParser(stream);
 
             List<RssItem> rssItems = parser.parseItems();
 
             for(RssItem rssItem : rssItems){
                 System.out.println(rssItem.rssItemToString());
             }
+            stream.close();
+
         }catch (Exception e){
             System.out.println(e);
         }
@@ -124,4 +143,86 @@ public class ProFrame extends JFrame {
         }
     }
 
+    /**
+     *
+     * @param url
+     */
+    private void addFeed(String url){
+        try{
+            File file = new File("feed.txt");
+            if(!file.exists()){
+                file.createNewFile();
+            }
+            FileWriter fileWriter = new FileWriter(file, true);
+            BufferedWriter writer = new BufferedWriter(fileWriter);
+
+            writer.write(url);
+            writer.newLine();
+            writer.flush();
+
+        }catch (Exception e){
+
+        }
+
+    }
+
+    private void readFeeds(){ // casem list string
+        try{
+            List<String> urls = new ArrayList<>();
+            File file = new File("feed.txt");
+
+            FileReader fileReader = new FileReader(file);
+            BufferedReader reader = new BufferedReader(fileReader);
+            String line;
+            while((line = reader.readLine()) != null){
+                urls.add(line);
+            }
+
+            for(String url : urls){
+                System.out.println(url);
+            }
+
+
+        }catch (Exception e){
+
+        }
+    }
+
+    private List<FeedItem> getAllFeeds(){
+        List<FeedItem> feedItems = new ArrayList<>();
+        try{
+            File file = new File("feedItems.csv");
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            bufferedReader.readLine(); // preskoci prvni radek
+            String line;
+            while((line = bufferedReader.readLine()) != null){
+                feedItems.add(FeedItem.parseFromCSV(line));
+            }
+
+
+        }catch (Exception e){
+
+        }
+//        parse souboru TODO ulozit komplet feedy do seznamu
+        return feedItems;
+    }
+
+    private void saveAllFeeds(List<FeedItem> items){
+        try {
+            File file = new File("feedItems.csv");
+            FileWriter writer = new FileWriter(file);
+            BufferedWriter bufferedWriter = new BufferedWriter(writer);
+            bufferedWriter.write("url; addedMilis; shouldShow; alias");
+            bufferedWriter.newLine();
+            bufferedWriter.flush();
+            for(FeedItem item : items){
+                bufferedWriter.write(item.toString());
+                bufferedWriter.newLine();
+                bufferedWriter.flush();
+            }
+        }catch (Exception e){
+
+        }
+    }
 }

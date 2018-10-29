@@ -84,7 +84,7 @@ public class RssParser {
        }finally {
            return items;
        }
-
+// http://www.eurofotbal.cz/feed/rss/premier-league/
     }
 
 }
