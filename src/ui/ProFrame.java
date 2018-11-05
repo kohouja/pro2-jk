@@ -1,22 +1,15 @@
 package ui;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
-import model.FeedItem;
-import model.TableModel;
-import model.ToDoItem;
+import model.*;
 import rss.RssItem;
 import rss.RssParser;
 
@@ -24,7 +17,7 @@ public class ProFrame extends JFrame {
 
     static int width = 800;
     static int height = 600;
-    private TableModel model;
+    private TableFeedModel model;
 
     public static void main(String... args) {
         ProFrame proFrame = new ProFrame();
@@ -32,56 +25,92 @@ public class ProFrame extends JFrame {
     }
 
     private void init(int width, int height) {
+
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setVisible(true);
         setSize(width, height);
         setTitle("Programování 2");
 
+        GridBagConstraints c = new GridBagConstraints();
+        boolean shouldFill = true;
+
+
+        JPanel feedData = new JPanel();
+        feedData.setPreferredSize(new Dimension(800, 600));
+
+
+        JPanel toolBarAndTable = new JPanel();
+        toolBarAndTable.setLayout(new BoxLayout(toolBarAndTable, BoxLayout.Y_AXIS));
+
         JPanel toolbar = new JPanel();
-        add(toolbar, BorderLayout.NORTH);
+        toolbar.setPreferredSize(new Dimension(500, 30));
 
-        JButton button = new JButton();
-        button.setText("Přidat poznámku");
-        toolbar.add(button);
-
-        JButton saveButton = new JButton();
-        saveButton.setText("Uložit");
-        toolbar.add(saveButton);
-
-        JButton loadButton = new JButton();
-        loadButton.setText("Načíst");
-        toolbar.add(loadButton);
+        JTextField urlTextField = new JTextField();
+        urlTextField.setPreferredSize( new Dimension( 350, 24 ) );
+        toolbar.add(urlTextField);
 
         JButton addUrlButton = new JButton();
         addUrlButton.setText("Add Url");
         toolbar.add(addUrlButton);
+        toolBarAndTable.add(toolbar);
 
-        addUrlButton.addActionListener(action -> {
-            String url = new AddUrlDialog().getUrl();
-            this.addFeed(url);
-            this.parse(url);
-        });
-
-        button.addActionListener(action -> {
-            ToDoItem item = new ProDialog().getItem();
-            model.add(item);
-        });
-        saveButton.addActionListener(action -> {
-            saveItems();
-        });
-        loadButton.addActionListener(action -> {
-            loadItems();
-        });
-
-        model = new TableModel();
-
+        model = new TableFeedModel();
         JTable table = new JTable(model);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scrollPaneTable = new JScrollPane(table);
+        toolBarAndTable.add(scrollPaneTable);
+
+        JButton settingsButton = new JButton("             Nastaveni            ");
+        settingsButton.setAlignmentX(CENTER_ALIGNMENT);
+        Insets insets = new Insets(0, 10, 0, 10);
+        settingsButton.setMargin(insets);
+
+        toolBarAndTable.add(settingsButton);
+
+        add(feedData, BorderLayout.LINE_START);
+        add(toolBarAndTable, BorderLayout.LINE_END);
+
         pack();
 
         setLocationRelativeTo(null); //center okna na monitoru
 
+
         readFeeds();
+
+
+
+//        JButton button = new JButton();
+//        button.setText("Přidat poznámku");
+//        toolbar.add(button);
+//
+//        JButton saveButton = new JButton();
+//        saveButton.setText("Uložit");
+//        toolbar.add(saveButton);
+//
+//        JButton loadButton = new JButton();
+//        loadButton.setText("Načíst");
+//        toolbar.add(loadButton);
+
+
+        addUrlButton.addActionListener(action -> {
+            String url = urlTextField.getText();
+            UrlItem urlItem = new UrlItem(url, "",30, true);
+            model.add(urlItem);
+            this.addFeed(url);
+            this.parse(url);
+        });
+
+//        button.addActionListener(action -> {
+//            ToDoItem item = new ProDialog().getItem();
+//            model.add(item);
+//        });
+//        saveButton.addActionListener(action -> {
+//            saveItems();
+//        });
+//        loadButton.addActionListener(action -> {
+//            loadItems();
+//        });
+
+
 
     }
 
@@ -134,9 +163,9 @@ public class ProFrame extends JFrame {
                             new File("our.db")
                     )
             );
-            List<ToDoItem> items = (List<ToDoItem>) stream.readObject();
+            List<UrlItem> urlItems = (List<UrlItem>) stream.readObject();
             stream.close();
-            model.setItems(items);
+            model.setItems(urlItems);
             model.fireTableDataChanged();
         } catch (Exception e) {
             e.printStackTrace();

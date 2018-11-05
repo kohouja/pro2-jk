@@ -1,31 +1,29 @@
 package model;
 
+import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.table.AbstractTableModel;
-
-public class TableModel extends AbstractTableModel {
-
-    List<ToDoItem> items;
+public class TableFeedModel extends AbstractTableModel {
+    List<UrlItem> urls;
     String[] columns = new String[]{"URL", "Added millis", "Alias", "Should show"};
 
-    public TableModel(){
-        items = new ArrayList<>();
+    public TableFeedModel(){
+        urls = new ArrayList<>();
     }
 
-    public void add(ToDoItem item){
-        items.add(item);
+    public void add(UrlItem urlItem){
+        urls.add(urlItem);
         fireTableDataChanged();
     }
 
-    public List<ToDoItem> getItems() {
-        return items;
+    public List<UrlItem> getItems() {
+        return urls;
     }
 
     @Override
     public int getRowCount() {
-        return items.size();
+        return urls.size();
     }
 
     @Override
@@ -35,11 +33,12 @@ public class TableModel extends AbstractTableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
-        ToDoItem item = items.get(rowIndex);
+        UrlItem urlItem = urls.get(rowIndex);
         switch (columnIndex){
-            case 0: return item.getContent();
-            case 1: return item.getDate();
-            case 3: return item.isDone();
+            case 0: return urlItem.getUrl();
+            case 1: return urlItem.getAddedMilis();
+            case 2: return urlItem.getAlias();
+            case 3: return urlItem.isShouldShow();
         }
         return null;
     }
@@ -52,7 +51,9 @@ public class TableModel extends AbstractTableModel {
     @Override
     public Class<?> getColumnClass(int columnIndex) {
         switch (columnIndex){
-            case 0: case 1: return String.class;
+            case 0: return String.class;
+            case 1: return Long.class;
+            case 2: return String.class;
             case 3: return Boolean.class;
         }
         return super.getColumnClass(columnIndex);
@@ -66,16 +67,16 @@ public class TableModel extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        ToDoItem item = items.get(rowIndex);
+        UrlItem urlItem = urls.get(rowIndex);
         if (columnIndex == 0){
-            item.setContent((String) aValue);
+            urlItem.setUrl((String) aValue);
         }
         if (columnIndex == 3){
-            item.setDone((boolean) aValue);
+            urlItem.setShouldShow((boolean) aValue);
         }
     }
 
-    public void setItems(List<ToDoItem> items) {
-        this.items = items;
+    public void setItems(List<UrlItem> urls) {
+        this.urls = urls;
     }
 }
